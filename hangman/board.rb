@@ -1,5 +1,7 @@
 class Board
 
+  attr_reader :counter, :board
+
 #Counter is 6 because the player can make 6 mistake
   def initialize
     @counter = 6
@@ -12,7 +14,14 @@ class Board
     x.times do
       @board.push("_")
     end
+  end
 
+  def check_previous_guess(x)
+    if @wrong_guess.include?(x) || @board.include?(x)
+      return true
+    else
+      return false
+    end
   end
 
 #Display the board
@@ -31,8 +40,28 @@ class Board
     end
     puts ""
     print "Wrong guesses: "
-    @wrong_guess.each do |elem|
-      print elem
+    if @wrong_guess.empty?
+      puts "no guess yet."
+    else
+      @wrong_guess.each do |elem|
+        print elem + ", "
+      end
+      puts ""
+    end
+  end
+
+  def mark_board(word, guess)
+    word = word.split(//)
+    if word.include?(guess)
+      #iteration avec guess + word
+      word.each_with_index do |value, index|
+        if guess == value
+          @board[index] = guess
+        end
+      end
+    else
+      @wrong_guess.push(guess)
+      @counter = @counter - 1
     end
   end
 
