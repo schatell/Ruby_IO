@@ -3,6 +3,8 @@ require_relative 'ai.rb'
 
 require 'colorize'
 
+require 'csv'
+
 #When called clear the screen#
 module Screen
   def self.clear
@@ -39,13 +41,45 @@ class Game
   end
 
   def load_game
+    if !(File.exist?("saves/saved_games.csv"))
+      puts "There is no save."
+      puts "Starting new game."
+      game_start
+    end
 
+    puts "\nSaved Games:\n"
+    saves = CSV.read("saves/saved_games.csv")
+    saves.each_with_index do |save, index|
+      puts "#{index + 1}. #{save[0]}"
+    end
+    load_save(saves)
+    game_start
+  end
+
+  def load_save(saves)
+    number = which_save(saves.size)
+    @board.counter = saves[number][1].to_i
+    @board.wrong_guess = saves[number][2].strip.split(//)
+    @computer.word = saves[number][3].split(//)
+    @board.board = saves[number][4].split(//)
+    puts "#{saves[number][0]} loaded"
+  end
+
+  def which_save(number_of_saves)
+    puts "\nput the number of the save you want to continue"
+    answer = gets.chomp.to_i
+    if answer < 1 || answer > number_of_saves
+      puts "There's no save no.#{answer}."
+      which_save(number_of_saves)
+    else
+      return answer - 1
+    end
   end
 
   #Will call the creation of the board and the choosing of a word
   def game_start
     @computer.choose_word
-    @board.create_board(@computer.word_lgt)
+    @board.create_board(@computer.word.length)
     Screen.clear
     game_loop
   end
@@ -74,6 +108,10 @@ class Game
         @board.mark_board(@computer.word, @guess)
       elsif @board.check_previous_guess(@guess) == true
         puts "You already made this guess previously, please take another guess"
+      elsif @guess == "save"
+        save_game
+      elsif @guess == "quit"
+        quit_game
       else
         puts "Choose only one letter."
       end
@@ -86,10 +124,14 @@ class Game
       puts "Do you want to save your game?"
       answer = gets.chomp.downcase
       if answer == "yes" || answer == "no"
-        if answer == yes
-          #save
-        else
-          #dont save
+        if answer == "yes"
+          Dir.mkdir('saves') unless File.exists?'saves'
+          puts "Name of the save: "
+          @name = gets.chomp
+          csv = File.open("saves/saved_games.csv", "ab")
+          csv.write("#{@name}, #{@board.counter}, #{@board.wrong_guess.join}, #{@computer.word.join()}, #{@board.board.join()}\n")
+           csv.close
+          puts "Game saved!"
         end
       else
         puts "Please write yes or no."
@@ -97,16 +139,14 @@ class Game
     end
   end
 
-  def quit?
+  def quit_game
     answer = "unknow"
     until answer == "yes" || answer == "no"
       puts "Do you want to quit? Yes or no"
       answer = gets.chomp.downcase
       if answer == "yes" || answer == "no"
-        if answer == yes
-          #quit
-        else
-          #dont quit
+        if answer == "yes"
+          abord("Goodbye")
         end
       else
         puts "Please write yes or no."

@@ -1,6 +1,6 @@
 class Board
 
-  attr_reader :counter, :board
+  attr_accessor :counter, :board, :wrong_guess
 
 #Counter is 6 because the player can make 6 mistake
   def initialize
@@ -51,7 +51,6 @@ class Board
   end
 
   def mark_board(word, guess)
-    word = word.split(//)
     if word.include?(guess)
       #iteration avec guess + word
       word.each_with_index do |value, index|
